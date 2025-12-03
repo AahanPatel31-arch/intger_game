@@ -1,5 +1,201 @@
-<html>
-  <body>
-    <h1>Hello! My game is coming soon.</h1>
-  </body>
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Integer Game</title>
+  <style>
+    :root{
+      --bg:#359ea4;
+      --title-bg:#68ed10;
+      --question-bg:#f95d09;
+      --score-bg:#fc0e0e;
+      --card-bg:#ffffff;
+      --accent:#0b3b3b;
+    }
+    *{box-sizing:border-box; font-family: Inter, Arial, Helvetica, sans-serif;}
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--accent);}
+    .wrap{
+      max-width:900px; margin:30px auto; padding:24px;
+      display:flex; flex-direction:column; align-items:center; gap:18px;
+    }
+
+    .title{
+      width:100%; text-align:center; background:var(--title-bg); color:#043; 
+      padding:14px 20px; font-size:44px; font-weight:800; border-radius:12px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    }
+
+    .card{
+      width:100%; background:var(--card-bg); border-radius:14px; padding:22px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.12);
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+    }
+
+    .question{
+      width:100%; text-align:center; font-size:56px; font-weight:700;
+      padding:18px; border-radius:12px; background:var(--question-bg); color:#fff;
+    }
+
+    .controls{
+      width:100%; display:flex; gap:12px; align-items:center; justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .input{
+      font-size:40px; padding:10px 16px; width:380px; text-align:center;
+      border-radius:10px; border:2px solid rgba(0,0,0,0.08);
+    }
+
+    .btn{
+      font-size:28px; padding:12px 20px; border-radius:10px; cursor:pointer;
+      border:none; font-weight:700; box-shadow:0 6px 14px rgba(0,0,0,0.08);
+    }
+    .btn-check{ background:#2ecc71; color:#043; }
+    .btn-next{ background:#3498db; color:#fff; }
+    .btn-reset{ background:#e74c3c; color:#fff; }
+
+    .result{
+      min-height:48px; font-size:28px; font-weight:700;
+    }
+
+    .score{
+      font-size:28px; padding:10px 18px; border-radius:10px; background:var(--score-bg); color:#fff;
+    }
+
+    footer{ margin-top:10px; color:#042; font-size:13px; opacity:0.9; }
+
+    /* responsive */
+    @media (max-width:520px){
+      .input{ width:100%; font-size:28px; }
+      .question{ font-size:36px; padding:12px; }
+      .title{ font-size:32px; }
+      .btn{ font-size:20px; padding:10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Integer Game</div>
+
+    <div class="card" role="main" aria-live="polite">
+      <div id="question" class="question" aria-label="Question">—</div>
+
+      <div class="controls">
+        <input id="answer" class="input" inputmode="numeric" autocomplete="off" placeholder="Type your answer" />
+        <button id="checkBtn" class="btn btn-check">My Answer</button>
+        <button id="nextBtn" class="btn btn-next">Next Question</button>
+        <button id="resetBtn" class="btn btn-reset" title="Reset score">Reset</button>
+      </div>
+
+      <div id="result" class="result" aria-live="polite"></div>
+
+      <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+        <div id="score" class="score">Score: 0</div>
+        <div id="askedInfo" style="font-size:15px; color:#333; opacity:0.85;"></div>
+      </div>
+    </div>
+
+    <footer>Press <strong>Enter</strong> to submit. Numbers range from <strong>-200</strong> to <strong>200</strong>.</footer>
+  </div>
+
+  <script>
+    // Keep same logic as your tkinter version
+    (function(){
+      const qEl = document.getElementById('question');
+      const ansEl = document.getElementById('answer');
+      const checkBtn = document.getElementById('checkBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const resultEl = document.getElementById('result');
+      const scoreEl = document.getElementById('score');
+      const askedInfo = document.getElementById('askedInfo');
+
+      let n1 = 0, n2 = 0, op = '+', correct = 0;
+      let score = 0;
+      let askedCount = 0;
+
+      function randInt(min, max){
+        // inclusive
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function generateQuestion(){
+        n1 = randInt(-200, 200);
+        n2 = randInt(-200, 200);
+        op = Math.random() < 0.5 ? '+' : '-';
+        correct = (op === '+') ? (n1 + n2) : (n1 - n2);
+
+        qEl.textContent = `${n1} ${op} ${n2}`;
+        resultEl.textContent = '';
+        resultEl.style.color = '';
+        ansEl.value = '';
+        ansEl.focus();
+        askedCount++;
+        askedInfo.textContent = `Questions asked: ${askedCount}`;
+      }
+
+      function checkAnswer(){
+        const raw = ansEl.value.trim();
+        if(raw === ''){
+          resultEl.textContent = 'Please enter a number!';
+          resultEl.style.color = 'red';
+          return;
+        }
+
+        // allow + or - and integer parsing; avoid floats: convert with parseInt base 10
+        // but also reject non-numeric like "12abc"
+        const parsed = parseInt(raw, 10);
+        if(isNaN(parsed) || parsed.toString() !== raw && parsed.toString() !== raw.replace(/^\+/, '')){
+          // This also allows "-0" and "+0" edgecases reasonably
+          // But if user typed "12.0" parseInt -> 12 but raw !== "12" so we reject
+          resultEl.textContent = 'Please enter a valid integer (no decimals).';
+          resultEl.style.color = 'red';
+          return;
+        }
+
+        if(parsed === correct){
+          score++;
+          scoreEl.textContent = `Score: ${score}`;
+          resultEl.textContent = 'Correct!';
+          resultEl.style.color = 'green';
+        } else {
+          resultEl.textContent = `Wrong! Correct: ${correct}`;
+          resultEl.style.color = 'red';
+        }
+      }
+
+      // event bindings
+      checkBtn.addEventListener('click', checkAnswer);
+      nextBtn.addEventListener('click', generateQuestion);
+      resetBtn.addEventListener('click', function(){
+        score = 0;
+        askedCount = 0;
+        scoreEl.textContent = 'Score: 0';
+        askedInfo.textContent = '';
+        resultEl.textContent = '';
+        generateQuestion();
+      });
+
+      // submit with Enter
+      ansEl.addEventListener('keydown', function(e){
+        if(e.key === 'Enter') {
+          e.preventDefault();
+          checkAnswer();
+        }
+      });
+
+      // start game
+      generateQuestion();
+
+      // Accessibility: focus management
+      // After checking, focus the answer so user can continue fast
+      checkBtn.addEventListener('click', function(){ setTimeout(()=>ansEl.focus(), 10); });
+      nextBtn.addEventListener('click', function(){ setTimeout(()=>ansEl.focus(), 10); });
+
+    })();
+  </script>
+</body>
 </html>
+
