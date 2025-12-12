@@ -101,101 +101,98 @@
   </div>
 
   <script>
-    // Keep same logic as your tkinter version
-    (function(){
-      const qEl = document.getElementById('question');
-      const ansEl = document.getElementById('answer');
-      const checkBtn = document.getElementById('checkBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const resultEl = document.getElementById('result');
-      const scoreEl = document.getElementById('score');
-      const askedInfo = document.getElementById('askedInfo');
+(function(){
+  const qEl = document.getElementById('question');
+  const ansEl = document.getElementById('answer');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultEl = document.getElementById('result');
+  const scoreEl = document.getElementById('score');
+  const askedInfo = document.getElementById('askedInfo');
 
-      let n1 = 0, n2 = 0, op = '+', correct = 0;
-      let score = 0;
-      let askedCount = 0;
+  let n1 = 0, n2 = 0, op = '+', correct = 0;
+  let score = 0;
+  let askedCount = 0;
 
-      function randInt(min, max){
-        // inclusive
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      }
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-      function generateQuestion(){
-        n1 = randInt(-200, 200);
-        n2 = randInt(-200, 200);
-        op = Math.random() < 0.5 ? '+' : '-';
-        correct = (op === '+') ? (n1 + n2) : (n1 - n2);
+  function generateQuestion(){
+    n1 = randInt(-200, 200);
+    n2 = randInt(-200, 200);
+    op = Math.random() < 0.5 ? '+' : '-';
+    correct = (op === '+') ? (n1 + n2) : (n1 - n2);
 
-        qEl.textContent = `${n1} ${op} ${n2}`;
-        resultEl.textContent = '';
-        resultEl.style.color = '';
-        ansEl.value = '';
-        ansEl.focus();
-        askedCount++;
-        askedInfo.textContent = `Questions asked: ${askedCount}`;
-      }
+    // Add parentheses
+    qEl.textContent = `(${n1}) ${op} (${n2})`;
 
-      function checkAnswer(){
-        const raw = ansEl.value.trim();
-        if(raw === ''){
-          resultEl.textContent = 'Please enter a number!';
-          resultEl.style.color = 'red';
-          return;
-        }
+    resultEl.textContent = '';
+    resultEl.style.color = '';
+    ansEl.value = '';
+    ansEl.focus();
 
-        // allow + or - and integer parsing; avoid floats: convert with parseInt base 10
-        // but also reject non-numeric like "12abc"
-        const parsed = parseInt(raw, 10);
-        if(isNaN(parsed) || parsed.toString() !== raw && parsed.toString() !== raw.replace(/^\+/, '')){
-          // This also allows "-0" and "+0" edgecases reasonably
-          // But if user typed "12.0" parseInt -> 12 but raw !== "12" so we reject
-          resultEl.textContent = 'Please enter a valid integer (no decimals).';
-          resultEl.style.color = 'red';
-          return;
-        }
+    askedCount++;
+    askedInfo.textContent = `Questions asked: ${askedCount}`;
+  }
 
-        if(parsed === correct){
-          score++;
-          scoreEl.textContent = `Score: ${score}`;
-          resultEl.textContent = 'Correct!';
-          resultEl.style.color = 'green';
-        } else {
-          resultEl.textContent = `Wrong! Correct: ${correct}`;
-          resultEl.style.color = 'red';
-        }
-      }
+  function checkAnswer(){
+    const raw = ansEl.value.trim();
+    if(raw === ''){
+      resultEl.textContent = 'Please enter a number!';
+      resultEl.style.color = 'red';
+      return;
+    }
 
-      // event bindings
-      checkBtn.addEventListener('click', checkAnswer);
-      nextBtn.addEventListener('click', generateQuestion);
-      resetBtn.addEventListener('click', function(){
-        score = 0;
-        askedCount = 0;
-        scoreEl.textContent = 'Score: 0';
-        askedInfo.textContent = '';
-        resultEl.textContent = '';
-        generateQuestion();
-      });
+    const parsed = parseInt(raw, 10);
+    if(isNaN(parsed)){
+      resultEl.textContent = 'Please enter a valid integer.';
+      resultEl.style.color = 'red';
+      return;
+    }
 
-      // submit with Enter
-      ansEl.addEventListener('keydown', function(e){
-        if(e.key === 'Enter') {
-          e.preventDefault();
-          checkAnswer();
-        }
-      });
+    if(parsed === correct){
+      score++;
+      scoreEl.textContent = `Score: ${score}`;
+      resultEl.textContent = 'Correct!';
+      resultEl.style.color = 'green';
 
-      // start game
-      generateQuestion();
+      // move to next question after 1 sec
+      setTimeout(generateQuestion, 1000);
 
-      // Accessibility: focus management
-      // After checking, focus the answer so user can continue fast
-      checkBtn.addEventListener('click', function(){ setTimeout(()=>ansEl.focus(), 10); });
-      nextBtn.addEventListener('click', function(){ setTimeout(()=>ansEl.focus(), 10); });
+    } else {
+      resultEl.textContent = `Wrong! Correct: ${correct}`;
+      resultEl.style.color = 'red';
 
-    })();
-  </script>
+      // move to next question after 1 sec
+      setTimeout(generateQuestion, 1000);
+    }
+  }
+
+  checkBtn.addEventListener('click', checkAnswer);
+  nextBtn.addEventListener('click', generateQuestion);
+
+  resetBtn.addEventListener('click', function(){
+    score = 0;
+    askedCount = 0;
+    scoreEl.textContent = 'Score: 0';
+    askedInfo.textContent = '';
+    resultEl.textContent = '';
+    generateQuestion();
+  });
+
+  ansEl.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+
+  generateQuestion();
+})();
+</script>
+
 </body>
 </html>
 
